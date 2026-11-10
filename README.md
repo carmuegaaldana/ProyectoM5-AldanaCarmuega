@@ -21,13 +21,14 @@ Servidor MCP en Node.js y TypeScript que expone cinco herramientas para consulta
 
 ## Instalación paso a paso
 
-Descargá el repositorio o clonalo usando la URL pública que figure en GitHub. El marcador del siguiente comando debe reemplazarse por esa URL real:
+Cloná el repositorio y entrá en su carpeta:
 
 ```bash
-git clone <URL_DEL_REPOSITORIO>
+git clone https://github.com/carmuegaaldana/ProyectoM5-AldanaCarmuega.git
+cd ProyectoM5-AldanaCarmuega
 ```
 
-Abrí una terminal dentro de la carpeta descargada o clonada y ejecutá:
+Instalá las dependencias y creá el archivo de configuración local:
 
 ```bash
 npm install
