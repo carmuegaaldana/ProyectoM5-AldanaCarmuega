@@ -1,6 +1,8 @@
+import { listRepositoriesSchema } from "../schemas/index.js";
+import { logToolError } from "../utils/logging.js";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { z } from "zod";
 import { listRepositories } from "../github/operations.js";
+import { toGitHubAPIError } from "../errors/index.js";
 
 export function registerListRepositoriesTool(server: McpServer) {
     server.registerTool(
@@ -9,12 +11,7 @@ export function registerListRepositoriesTool(server: McpServer) {
             description:
                 "Lista los repositorios propios del usuario autenticado en GitHub, " +
                 "ordenados por actualización. Permite consultar distintas páginas.",
-            inputSchema: {
-                page: z.number().int().min(1).default(1)
-                    .describe("Número de página, comenzando en 1"),
-                perPage: z.number().int().min(1).max(100).default(30)
-                    .describe("Cantidad de repositorios por página, entre 1 y 100"),
-            },
+            inputSchema: listRepositoriesSchema.shape,
         },
         async ({ page, perPage }) => {
             try {
@@ -28,15 +25,19 @@ export function registerListRepositoriesTool(server: McpServer) {
                         },
                     ],
                 };
-            } catch {
+            } catch (error: unknown) {
+                const publicError = toGitHubAPIError(
+                    error,
+                    "los repositorios del usuario autenticado"
+                );
+                logToolError("list_repositories", publicError);
+
                 return {
                     isError: true,
                     content: [
                         {
                             type: "text",
-                            text:
-                                "No se pudieron listar los repositorios. " +
-                                "Verificá tu conexión y la configuración del token de GitHub.",
+                            text: publicError.message,
                         },
                     ],
                 };

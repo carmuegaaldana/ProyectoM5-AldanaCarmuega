@@ -1,10 +1,7 @@
+import { listIssuesSchema } from "../schemas/index.js";
+import { logToolError } from "../utils/logging.js";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { z } from "zod";
 import { listIssues } from "../github/operations.js";
-import {
-    ownerSchema,
-    repositoryNameSchema,
-} from "../schemas/index.js";
 import { toGitHubAPIError } from "../errors/index.js";
 
 export function registerListIssuesTool(server: McpServer) {
@@ -15,16 +12,7 @@ export function registerListIssuesTool(server: McpServer) {
                 "Lista los issues abiertos de un repositorio de GitHub. " +
                 "Requiere el propietario y el nombre del repositorio. " +
                 "Excluye los pull requests y permite consultar distintas páginas.",
-            inputSchema: {
-                owner: ownerSchema,
-                repo: repositoryNameSchema,
-
-                page: z.number().int().min(1).default(1)
-                    .describe("Número de página, comenzando en 1"),
-
-                perPage: z.number().int().min(1).max(100).default(30)
-                    .describe("Cantidad de elementos por página antes de excluir pull requests"),
-            },
+            inputSchema: listIssuesSchema.shape,
         },
         async ({ owner, repo, page, perPage }) => {
             try {
@@ -48,10 +36,7 @@ export function registerListIssuesTool(server: McpServer) {
                     `el repositorio ${owner}/${repo}`
                 );
 
-                console.error("Falló list_issues", {
-                    type: publicError.name,
-                    status: publicError.status,
-                });
+                logToolError("list_issues", publicError);
 
                 return {
                     isError: true,

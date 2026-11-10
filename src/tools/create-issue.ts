@@ -1,10 +1,8 @@
+import { createIssueSchema } from "../schemas/index.js";
+import { logToolError } from "../utils/logging.js";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { z } from "zod";
 import { createIssue } from "../github/operations.js";
-import {
-    ownerSchema,
-    repositoryNameSchema,
-} from "../schemas/index.js";
+import { toGitHubAPIError } from "../errors/index.js";
 
 export function registerCreateIssueTool(server: McpServer) {
     server.registerTool(
@@ -14,22 +12,7 @@ export function registerCreateIssueTool(server: McpServer) {
                 "Crea un issue en un repositorio de GitHub. " +
                 "Usar cuando el usuario solicite registrar un error, tarea o propuesta. " +
                 "Requiere propietario, repositorio, título y descripción.",
-            inputSchema: {
-                owner: ownerSchema,
-                repo: repositoryNameSchema,
-
-                title: z
-                    .string()
-                    .trim()
-                    .min(1, "El título no puede estar vacío")
-                    .describe("Título breve que identifica el error, tarea o propuesta"),
-
-                body: z
-                    .string()
-                    .trim()
-                    .min(1, "La descripción no puede estar vacía")
-                    .describe("Descripción del issue, admite formato Markdown"),
-            },
+            inputSchema: createIssueSchema.shape,
         },
         async ({ owner, repo, title, body }) => {
             try {
@@ -43,15 +26,19 @@ export function registerCreateIssueTool(server: McpServer) {
                         },
                     ],
                 };
-            } catch {
+            } catch (error: unknown) {
+                const publicError = toGitHubAPIError(
+                    error,
+                    `el repositorio ${owner}/${repo}`
+                );
+                logToolError("create_issue", publicError);
+
                 return {
                     isError: true,
                     content: [
                         {
                             type: "text",
-                            text:
-                                `No se pudo crear el issue en ${owner}/${repo}. ` +
-                                "Verificá el repositorio, tus permisos y la conexión.",
+                            text: publicError.message,
                         },
                     ],
                 };

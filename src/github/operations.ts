@@ -1,15 +1,17 @@
 import { createGitHubClient } from "./client.js";
+import { retryRead } from "../utils/retry.js";
+import { ValidationError } from "../errors/index.js";
 
 export async function listRepositories(page: number, perPage: number) {
     const client = createGitHubClient();
 
-    const { data } = await client.repos.listForAuthenticatedUser({
+    const { data } = await retryRead(() => client.repos.listForAuthenticatedUser({
         affiliation: "owner",
         sort: "updated",
         direction: "desc",
         page,
         per_page: perPage,
-    });
+    }));
 
     return data.map((repo) => ({
         name: repo.name,
@@ -28,7 +30,7 @@ export async function listIssues(
 ) {
     const client = createGitHubClient();
 
-    const { data } = await client.issues.listForRepo({
+    const { data } = await retryRead(() => client.issues.listForRepo({
         owner,
         repo,
         state: "open",
@@ -36,7 +38,7 @@ export async function listIssues(
         direction: "desc",
         page,
         per_page: perPage,
-    });
+    }));
 
     return data
         .filter((issue) => !issue.pull_request)
@@ -106,24 +108,26 @@ export async function createCommit(
     const client = createGitHubClient();
 
     // Comprobamos que el repositorio y la rama sean accesibles.
-    await client.repos.getBranch({
+    await retryRead(() => client.repos.getBranch({
         owner,
         repo,
         branch,
-    });
+    }));
 
     let sha: string | undefined;
 
     try {
-        const { data } = await client.repos.getContent({
+        const { data } = await retryRead(() => client.repos.getContent({
             owner,
             repo,
             path,
             ref: branch,
-        });
+        }));
 
         if (Array.isArray(data) || data.type !== "file") {
-            throw new Error("La ruta debe corresponder a un archivo");
+            throw new ValidationError(
+                "La ruta debe corresponder a un archivo, no a una carpeta u otro recurso."
+            );
         }
 
         sha = data.sha;
