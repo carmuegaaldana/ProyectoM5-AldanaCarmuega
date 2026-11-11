@@ -282,14 +282,16 @@ El modelo participa en la elección de la herramienta. El cliente MCP es el comp
 npm test
 ```
 
-| Archivo | Comportamiento cubierto |
-|---|---|
-| `schemas.test.ts` | Entradas válidas e inválidas, defaults, paginación, rutas y contenido |
-| `errors.test.ts` | Clases, mensajes públicos, estados HTTP y causas de red |
-| `github.test.ts` | Las cinco operaciones con el cliente de Octokit simulado |
-| `retry.test.ts` | Máximo de intentos y tiempos con reloj simulado |
-| `logging.test.ts` | Canal stderr y exclusión del mensaje interno |
-| `server.test.ts` | Cliente y servidor MCP en memoria, registro y validación |
+La suite contiene 16 casos de prueba.
+
+| Archivo | Tests | Comportamiento cubierto |
+|---|---:|---|
+| `schemas.test.ts` | 3 | Visibilidad por defecto, descripción, título, rutas y ramas |
+| `errors.test.ts` | 2 | Mensajes ante errores de autenticación y recursos no encontrados |
+| `github.test.ts` | 7 | Las cinco herramientas con Octokit simulado, incluida la creación y actualización de archivos |
+| `retry.test.ts` | 2 | Esperas progresivas y respeto de `Retry-After` |
+| `logging.test.ts` | 1 | Registro por stderr sin exponer el mensaje interno |
+| `server.test.ts` | 1 | Rechazo de parámetros inválidos antes de consultar GitHub |
 
 Los tests no crean recursos reales ni necesitan un token. El cliente o las operaciones se reemplazan mediante mocks. Un test passing no demuestra disponibilidad del host externo, del modelo ni de GitHub en ese momento.
 

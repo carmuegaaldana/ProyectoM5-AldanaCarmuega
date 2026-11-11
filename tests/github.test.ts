@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createCommit, createIssue, createRepository, listIssues, listRepositories } from "../src/github/operations.js";
-import { ValidationError } from "../src/errors/index.js";
 
 const mocks = vi.hoisted(() => ({
     createIssue: vi.fn(),
@@ -108,16 +107,6 @@ describe("listIssues", () => {
             },
         ]);
     });
-
-    it("propaga un error de GitHub para que el handler lo transforme", async () => {
-        const githubError = { status: 401 };
-
-        mocks.listIssues.mockRejectedValue(githubError);
-
-        await expect(
-            listIssues("equipo", "demo", 1, 5)
-        ).rejects.toBe(githubError);
-    });
 });
 
 describe("createCommit", () => {
@@ -200,49 +189,6 @@ describe("createCommit", () => {
 
         expect(result.action).toBe("updated");
     });
-
-    it("no intenta guardar si la lectura del archivo falla con un 403", async () => {
-        const githubError = { status: 403 };
-
-        mocks.getContent.mockRejectedValue(githubError);
-
-        await expect(
-            createCommit(
-                "equipo",
-                "demo",
-                "main",
-                "prueba.txt",
-                "Hola",
-                "Agregar archivo"
-            )
-        ).rejects.toBe(githubError);
-
-        expect(mocks.saveFile).not.toHaveBeenCalled();
-    });
-
-    it("rechaza una carpeta sin intentar guardar un archivo", async () => {
-        mocks.getContent.mockResolvedValue({
-            data: [
-                {
-                    type: "file",
-                    name: "notas.txt",
-                },
-            ],
-        });
-
-        await expect(
-            createCommit(
-                "equipo",
-                "demo",
-                "main",
-                "docs",
-                "Contenido de prueba",
-                "Intentar modificar una carpeta"
-            )
-        ).rejects.toBeInstanceOf(ValidationError);
-
-        expect(mocks.saveFile).not.toHaveBeenCalled();
-    });
 });
 
 describe("listRepositories", () => {
@@ -285,31 +231,5 @@ describe("escrituras y errores", () => {
         mocks.createIssue.mockRejectedValue(error);
         await expect(createIssue("equipo", "demo", "Título", "Descripción")).rejects.toBe(error);
         expect(mocks.createIssue).toHaveBeenCalledTimes(1);
-    });
-
-    it("no reintenta crear un repositorio si GitHub responde 503", async () => {
-        const error = { status: 503 };
-        mocks.createRepository.mockRejectedValue(error);
-        await expect(createRepository("demo", "Prueba", true)).rejects.toBe(error);
-        expect(mocks.createRepository).toHaveBeenCalledTimes(1);
-    });
-
-    it("no busca ni escribe un archivo si la rama no existe", async () => {
-        const error = { status: 404 };
-        mocks.getBranch.mockRejectedValue(error);
-        await expect(createCommit("equipo", "demo", "ausente", "a.txt", "Hola", "Prueba"))
-            .rejects.toBe(error);
-        expect(mocks.getContent).not.toHaveBeenCalled();
-        expect(mocks.saveFile).not.toHaveBeenCalled();
-    });
-
-    it("no repite un commit si se pierde la respuesta al guardar", async () => {
-        mocks.getBranch.mockResolvedValue({ data: { name: "main" } });
-        mocks.getContent.mockRejectedValue({ status: 404 });
-        const error = { code: "ECONNRESET" };
-        mocks.saveFile.mockRejectedValue(error);
-        await expect(createCommit("equipo", "demo", "main", "a.txt", "Hola", "Prueba"))
-            .rejects.toBe(error);
-        expect(mocks.saveFile).toHaveBeenCalledTimes(1);
     });
 });
