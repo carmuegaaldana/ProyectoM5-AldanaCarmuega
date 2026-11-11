@@ -132,13 +132,13 @@ El servidor carga su `.env` local, por lo que no necesita el token en este JSON.
 
 En la configuración usada durante el desarrollo, Node estaba en `/usr/local/bin/node` y el proyecto en `/Users/aldanacarmuega/Programacion/ProyectoM5-AldanaCarmuega`. Otras computadoras deben usar sus propias rutas.
 
-Guardá y refrescá la configuración. Verificá que aparezcan cinco herramientas habilitadas. Después abrí un chat nuevo y probá un prompt de consulta. Reconocer herramientas y ejecutarlas desde el modelo son dos comprobaciones distintas.
+Guardá y refrescá la configuración. Verificá que aparezcan cinco herramientas habilitadas y abrí un chat nuevo para seguir la prueba de extremo a extremo.
 
 La ruta global y la interfaz pueden variar con la versión. Consultá la [documentación oficial de MCP en Antigravity](https://antigravity.google/docs/mcp).
 
 ## Herramientas
 
-Los siguientes argumentos JSON sirven para Inspector. Los prompts son ejemplos para un host con agente operativo; no se presentan como ejecuciones ya verificadas en Antigravity.
+Usá los ejemplos de argumentos JSON en MCP Inspector y los prompts en el chat de Antigravity.
 
 ### list_repositories
 
@@ -306,6 +306,12 @@ Si npm solicita instalar Inspector, revisá el paquete indicado y aceptá su ins
 
 Inspector inicia el servidor. Para probar valores fuera de rango, usá la edición JSON: el formulario visual puede ajustar un número al rango permitido antes de enviarlo.
 
+### Prueba de extremo a extremo en Antigravity
+
+1. Pedí al agente que use `list_repositories` de `github-m5` con `page: 1` y `perPage: 5`. Verificá en el chat que se ejecutó la herramienta y que devolvió repositorios de tu cuenta.
+2. En un repositorio de práctica, ejecutá los prompts de `create_repository`, `create_issue` y `list_issues`. Confirmá en GitHub el repositorio y el issue creados, y comprobá que la consulta devuelve ese issue.
+3. Probá `create_commit` con un archivo de práctica y revisá el contenido y el commit en GitHub. Podés repetir la operación con la misma ruta para verificar la actualización.
+
 ## Troubleshooting
 
 | Problema | Qué revisar |
@@ -327,8 +333,6 @@ Inspector inicia el servidor. Para probar valores fuera de rango, usá la edici�
 Las lecturas admiten hasta tres intentos, con esperas progresivas y respeto de los plazos de GitHub. Si la espera exigida supera cinco segundos, se devuelve el error sin reintentar antes de tiempo. Las escrituras no se repiten automáticamente para evitar duplicados. El timeout por solicitud es de diez segundos.
 
 Los logs van por stderr y stdout queda reservado para el protocolo MCP. No se publican el token ni errores técnicos completos.
-
-Durante la integración, Antigravity reconoció cinco herramientas, pero la ejecución desde su modelo quedó pendiente por fallos que también ocurrían con el MCP desactivado.
 
 ## Licencia
 
